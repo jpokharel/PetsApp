@@ -15,10 +15,15 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +31,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.example.android.pets.data.PetContract;
+import com.example.android.pets.data.PetDbHelper;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -103,6 +112,31 @@ public class EditorActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void insertData(){
+        PetDbHelper mPetDbHelper = new PetDbHelper(this);
+
+        SQLiteDatabase db = mPetDbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        String name = mNameEditText.getText().toString().trim();
+        String breed = mBreedEditText.getText().toString().trim();
+        int weight = Integer.parseInt(mWeightEditText.getText().toString().trim());
+        int gender = mGender;
+
+        values.put(PetContract.PetEntry.COLUMN_PET_NAME,name);
+        values.put(PetContract.PetEntry.COLUMN_PET_BREED,breed);
+        values.put(PetContract.PetEntry.COLUMN_PET_GENDER,gender);
+        values.put(PetContract.PetEntry.COLUMN_PET_WEIGHT,weight);
+
+        long returnValue = db.insert(PetContract.PetEntry.TABLE_NAME,null,values);
+        Log.i("EditorActivity.java", "After insertion of value: " + returnValue);
+
+        if(returnValue == -1)
+            Toast.makeText(this,"Error in inserting the data", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this,"Inserted the Pet: " + name, Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -111,13 +145,15 @@ public class EditorActivity extends AppCompatActivity {
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                insertData();
+                finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
